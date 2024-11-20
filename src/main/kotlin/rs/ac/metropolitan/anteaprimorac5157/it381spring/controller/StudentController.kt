@@ -2,6 +2,7 @@ package rs.ac.metropolitan.anteaprimorac5157.it381spring.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -10,45 +11,54 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.server.ResponseStatusException
+import rs.ac.metropolitan.anteaprimorac5157.it381spring.data.StudentDataStore
 import rs.ac.metropolitan.anteaprimorac5157.it381spring.model.Student
 import java.util.*
 
 @Controller
 class StudentController {
-    val studentsList = listOf(
-        Student(1, "Amanda Smith", 7.95, "Test comment 1"),
-        Student(2, "Charlie Brown", 6.50, "Test comment 2"),
-        Student(3, "Bob Johnson", 9.75, "Test comment 3"),
-    )
 
     @GetMapping("/", "/students")
     fun students(model: Model): String {
-        model.addAttribute("students", studentsList)
+        model.addAttribute("students", StudentDataStore.students)
         return "students"
     }
 
     @GetMapping("/students/{id}")
-    fun getStudent(@PathVariable id: Long, model: Model): String {
-        val student = studentsList.find { student -> student.id == id }
+    fun getStudent(@PathVariable id: Long, model: Model, @AuthenticationPrincipal user: UserDetails
+    ): String {
+        val student = StudentDataStore.findById(id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found")
+
+        if (!hasAccessToStudent(user, id)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied")
+        }
+
         model.addAttribute("student", student)
+        model.addAttribute("isTeacher", user.authorities.any { it.authority == "ROLE_TEACHER" })
         return "student-details"
     }
 
-    @PostMapping("/students/{id}/grade")
-    fun updateGrade(@PathVariable id: Long, @RequestParam grade: Double): String {
-        studentsList.find { it.id == id }?.let { student ->
-            student.grade = grade
+    private fun hasAccessToStudent(user: UserDetails, studentId: Long): Boolean {
+        fun UserDetails.hasRole(role: String) =
+            authorities.any { it.authority == "ROLE_$role" }
+
+        return when {
+            user.hasRole("TEACHER") -> true
+            user.hasRole("STUDENT") -> StudentDataStore.isStudentEmail(user.username, studentId)
+            else -> false
         }
-        return "redirect:/students/$id"
     }
+
+    @PostMapping("/students/{id}/grade")
+    fun updateGrade(@PathVariable id: Long, @RequestParam grade: Double) =
+        StudentDataStore.findById(id)
+            ?.also { it.grade = grade }
+            .let { "redirect:/students/$id" }
 
     @PostMapping("/students/{id}/comment")
-    fun updateComment(@PathVariable id: Long, @RequestParam comment: String): String {
-        studentsList.find { it.id == id }?.let { student ->
-            student.comment = comment
-        }
-        return "redirect:/students/$id"
-    }
-
+    fun updateComment(@PathVariable id: Long, @RequestParam comment: String) =
+        StudentDataStore.findById(id)
+            ?.also { it.comment = comment }
+            .let { "redirect:/students/$id" }
 }
