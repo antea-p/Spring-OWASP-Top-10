@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Students</title>
+</head>
+<body>
+    <div>
+        <h1>Student List</h1>
+        <div>
+            <div th:each="student : ${students}">
+                <a th:href="@{/students/{id}(id=${student.id})}">
+                    <h3 th:text="${student.name} + ' ' + ${student.id}"></h3>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
