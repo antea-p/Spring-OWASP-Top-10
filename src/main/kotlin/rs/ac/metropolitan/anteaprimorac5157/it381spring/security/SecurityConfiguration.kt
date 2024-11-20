@@ -76,7 +76,7 @@ class SecurityConfiguration {
 
                 StudentDataStore.students.forEach { student ->
                     add(User.withDefaultPasswordEncoder()
-                        .username(StudentDataStore.getStudentEmail(student))
+                        .username(student.email)
                         .password("password")
                         .roles("STUDENT")
                         .build())
