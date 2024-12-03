@@ -7,7 +7,7 @@
 </head>
 <body>
 <div th:replace="~{fragments :: navbar}"></div>
-<div th:if="${isTeacher}" >
+<div th:if="${isTeacher}">
     <a th:href="@{/students}" class="button">Back to List</a>
 </div>
 <div>
@@ -31,18 +31,14 @@
         </p>
     </div>
 
-    <form th:if="${isTeacher}"
-          th:action="@{/students/{id}/grade(id=${student.id})}"
-          method="post">
-       <input type="number" min="5.00" max="10.00" step="0.01" name="grade" required>
-       <input type="submit" value="Update Grade">
+    <form th:if="${isTeacher}" th:action="@{/students/{id}/grade(id=${student.id})}" method="post">
+        <input type="number" min="5.00" max="10.00" step="0.01" name="grade" required>
+        <input type="submit" value="Update Grade">
     </form>
 
-    <form
-          th:action="@{/students/{id}/comment(id=${student.id})}"
-          method="post">
-       <input type="text" name="comment" required>
-       <input type="submit" value="Update Comment">
+    <form th:action="@{/students/{id}/comment(id=${student.id})}" method="post">
+        <input type="text" name="comment" required>
+        <input type="submit" value="Update Comment">
     </form>
 
 </div>

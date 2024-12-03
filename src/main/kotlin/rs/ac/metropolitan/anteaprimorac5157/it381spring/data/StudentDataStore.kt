@@ -1,7 +1,9 @@
 package rs.ac.metropolitan.anteaprimorac5157.it381spring.data
 
+import org.springframework.stereotype.Component
 import rs.ac.metropolitan.anteaprimorac5157.it381spring.model.Student
 
+@Component("studentDataStore")
 object StudentDataStore {
     val students = listOf(
         Student(1, "Amanda Smith", "amanda.smith.1@university.edu", 7.95, "Test comment 1"),
