@@ -9,7 +9,9 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import rs.ac.metropolitan.anteaprimorac5157.it381spring.data.StudentDataStore
 
@@ -17,7 +19,7 @@ import rs.ac.metropolitan.anteaprimorac5157.it381spring.data.StudentDataStore
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-class SecurityConfiguration {
+class SecurityConfiguration(private val securityLogger: SecurityLogger) {
 
     @Bean
     @Throws(Exception::class)
@@ -33,13 +35,13 @@ class SecurityConfiguration {
                 form
                     .loginPage("/login")
                     .successHandler(authenticationSuccessHandler())
-                    .failureUrl("/login?error=true")
+                    .failureHandler(authenticationFailureHandler())
                     .permitAll()
             }
             .logout { logout ->
                 logout
                     .logoutRequestMatcher(AntPathRequestMatcher("/logout"))
-                    .logoutSuccessUrl("/login?logout=true")
+                    .logoutSuccessHandler(logoutSuccessHandler())
                     .permitAll()
             }
 
@@ -49,6 +51,7 @@ class SecurityConfiguration {
     @Bean
     fun authenticationSuccessHandler(): AuthenticationSuccessHandler {
         return AuthenticationSuccessHandler { request, response, authentication ->
+            securityLogger.logAuthenticationSuccess(authentication.name, request)
             when {
                 authentication.authorities.any { it.authority == "ROLE_TEACHER" } ->
                     response.sendRedirect("/students")
@@ -62,6 +65,28 @@ class SecurityConfiguration {
 
                 else -> response.sendRedirect("/")
             }
+        }
+    }
+
+    @Bean
+    fun authenticationFailureHandler(): AuthenticationFailureHandler {
+        return AuthenticationFailureHandler { request, response, exception ->
+            securityLogger.logAuthenticationFailure(
+                request.getParameter("username") ?: "unknown",
+                request,
+                exception.message
+            )
+            response.sendRedirect("/login?error=true")
+        }
+    }
+
+    @Bean
+    fun logoutSuccessHandler(): LogoutSuccessHandler {
+        return LogoutSuccessHandler { request, response, authentication ->
+            authentication?.let { auth ->
+                securityLogger.logLogout(auth.name, request)
+            }
+            response.sendRedirect("/login?logout=true")
         }
     }
 
