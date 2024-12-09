@@ -14,6 +14,9 @@ object StudentDataStore {
 
     fun findById(id: Long): Student? = students.find { it.id == id }
 
+    fun findByEmail(email: String): Student? =
+        students.find { it.email == email }
+
     fun findStudentIdByEmail(email: String): Long? =
         students.find { it.email == email }?.id
 

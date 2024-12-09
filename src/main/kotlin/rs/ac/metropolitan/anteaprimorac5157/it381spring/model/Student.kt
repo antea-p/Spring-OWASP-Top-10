@@ -6,4 +6,6 @@ data class Student(
     val email: String,
     var grade: Double,
     var comment: String,
+    val securityQuestion: String = "What is your favourite movie?",
+    var securityAnswer: String = "WarGames"
 )
