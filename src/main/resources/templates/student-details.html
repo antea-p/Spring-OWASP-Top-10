@@ -28,7 +28,12 @@
         <p>
             <strong>Comment:</strong>
             <span th:text="${student.comment}"></span>
-        </p>
+
+        <div th:if="${previewTitle}" class="url-preview">
+            <h3>Link Preview:</h3>
+            <h4 th:text="${previewTitle}"></h4>
+            <p th:text="${previewContent}"></p>
+        </div>
     </div>
 
     <form th:if="${isTeacher}" th:action="@{/students/{id}/grade(id=${student.id})}" method="post">

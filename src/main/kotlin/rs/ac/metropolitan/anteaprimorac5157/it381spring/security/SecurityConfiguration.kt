@@ -1,7 +1,10 @@
 package rs.ac.metropolitan.anteaprimorac5157.it381spring.security
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authorization.AuthorizationDecision
+import org.springframework.security.authorization.AuthorizationManager
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -27,6 +30,16 @@ class SecurityConfiguration {
             .authorizeHttpRequests { requests ->
                 requests
                     .requestMatchers("/", "/login", "/error", "/css/**").permitAll()
+                    // Zaobilazak sigurnosnih provjera za lokalne zahtjeve
+                    .requestMatchers(AntPathRequestMatcher("/**")).access(AuthorizationManager { auth, context ->
+                        val request = context.request
+                        if (request.remoteAddr == "127.0.0.1" ||
+                            request.remoteAddr == "0:0:0:0:0:0:0:1"
+                        ) {
+                            return@AuthorizationManager AuthorizationDecision(true)
+                        }
+                        AuthorizationDecision(auth != null)
+                    })
                     .anyRequest().authenticated()
             }
             .formLogin { form ->
